@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <raylib.h>
+#include <rlgl.h>
+#include <raymath.h>
 
 enum State {
   DEAD = 0,
   ALIVE
 };
+
+bool waiting = true;
 
 struct Game {
   int **cells;
@@ -87,18 +92,17 @@ int count_population(struct Game *game) {
 }
 
 void draw(struct Game *game) {
-  system("clear");
+  BeginDrawing();
+  ClearBackground(RAYWHITE);
   
-  printf("Generation: %d\n", game->generation);
-  printf("Population: %d\n", count_population(game));
-
-  for (int y = 0; y < game->height; y++) {
-    for (int x = 0; x < game->width; x++) {
-        char representation = game->cells[y][x] == ALIVE ? 'o' : ' ';
-        printf("%c ", representation);
+  for (int x = 0; x < game->width; x++) {
+    for (int y = 0; y < game->height; y++) {
+      DrawRectangle(x * 50 + 1, y * 50 + 1, 48, 48, game->cells[y][x] == ALIVE ? RED : RAYWHITE);
+      DrawRectangleLines(x * 50, y * 50, 50, 50, ORANGE); 
     }
-    printf("\n");
   }
+
+  EndDrawing();
 }
 
 void init_game(struct Game *game, int width, int height) {
@@ -113,18 +117,44 @@ void init_game(struct Game *game, int width, int height) {
   }
 }
 
+void get_cell_from_click(Vector2 mousePos, int cell[2]) {
+    cell[0] = mousePos.x / 50;
+    cell[1] = mousePos.y / 50;
+}
 
 int main() {
   struct Game game = {0};
-  init_game(&game, 10, 10);
+  init_game(&game, 20, 20);
   
   game.cells[5][5] = ALIVE; 
   game.cells[6][5] = ALIVE;
   game.cells[4][5] = ALIVE;
   
-  while (1) {
-    draw(&game);
-    next_generation(&game);
-    sleep(1);
+  const int screenWidth = game.width * 50;
+  const int screenHeight = game.height * 50;
+
+  InitWindow(screenWidth, screenHeight, "example");
+  SetTargetFPS(10);
+
+  while (!WindowShouldClose()) {
+    if (waiting) {
+      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        static int cellPos[2];
+
+        Vector2 mousePos = GetMousePosition();
+        
+        get_cell_from_click(mousePos, cellPos);
+        
+        game.cells[cellPos[1]][cellPos[0]] = !game.cells[cellPos[1]][cellPos[0]];
+      } else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        waiting = false;
+      }
+    } else {
+      next_generation(&game);
+    }
+
+    draw(&game);  
   }
+
+  CloseWindow();
 }
