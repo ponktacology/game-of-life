@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <raylib.h>
-#include <rlgl.h>
-#include <raymath.h>
 
 enum State {
   DEAD = 0,
