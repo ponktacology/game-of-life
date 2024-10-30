@@ -18,19 +18,19 @@ struct Game {
 };
 
 int count_cell_neighbours(struct Game *game, int x, int y) {
-  static int deltas[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1} };
+  static const int deltas[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1} };
  
   int neighbours = 0;
   for (int i = 0; i < 8; i++) {
-    int *delta = deltas[i];
-    int neighbourY = y + delta[0];
-    int neighbourX = x + delta[1];
+    const int *delta = deltas[i];
+    const int neighbourY = y + delta[0];
+    const int neighbourX = x + delta[1];
     if (neighbourY >= game->height
       || neighbourX >= game->width
       || neighbourY < 0 
       || neighbourX < 0) continue;
 
-    int neighbour = game->cells[y + delta[0]][x + delta[1]];
+    const int neighbour = game->cells[y + delta[0]][x + delta[1]];
     if (neighbour == ALIVE) {
       neighbours++;
     }    
@@ -40,8 +40,8 @@ int count_cell_neighbours(struct Game *game, int x, int y) {
 }
 
 void determine_life(struct Game *game, int x, int y) {
-  int cell = game->cells[y][x];
-  int neighbours = count_cell_neighbours(game, x, y);
+  const int cell = game->cells[y][x];
+  const int neighbours = count_cell_neighbours(game, x, y);
   
   if (cell == ALIVE && (neighbours < 2 || neighbours > 3)) {
     game->changes[y][x] = DEAD;
@@ -91,7 +91,6 @@ void draw(struct Game *game) {
   BeginDrawing();
   ClearBackground(RAYWHITE);
   
-
   for (int x = 0; x < game->width; x++) {
     for (int y = 0; y < game->height; y++) {
       DrawRectangle(x * 50 + 1, y * 50 + 1, 48, 48, game->cells[y][x] == ALIVE ? RED : RAYWHITE);
@@ -140,7 +139,7 @@ void get_cell_from_click(Vector2 mousePos, int cell[2]) {
 void process_initial_setup(struct Game *game) {
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     static int cellPos[2];
-    Vector2 mousePos = GetMousePosition();    
+    const Vector2 mousePos = GetMousePosition();    
     get_cell_from_click(mousePos, cellPos);
     game->cells[cellPos[1]][cellPos[0]] = !game->cells[cellPos[1]][cellPos[0]];
   } else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
@@ -151,10 +150,6 @@ void process_initial_setup(struct Game *game) {
 int main() {
   struct Game game = {0};
   init_game(&game, 20, 20);
-  
-  game.cells[5][5] = ALIVE; 
-  game.cells[6][5] = ALIVE;
-  game.cells[4][5] = ALIVE;
   
   const int screenWidth = game.width * 50;
   const int screenHeight = game.height * 50;
