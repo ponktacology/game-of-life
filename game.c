@@ -8,7 +8,6 @@ enum State {
   ALIVE
 };
 
-bool waiting = true;
 
 struct Game {
   int **cells;
@@ -16,6 +15,7 @@ struct Game {
   int width;
   int height;
   int generation;
+  bool setup;
 };
 
 int count_cell_neighbours(struct Game *game, int x, int y) {
@@ -93,12 +93,19 @@ void draw(struct Game *game) {
   BeginDrawing();
   ClearBackground(RAYWHITE);
   
+
   for (int x = 0; x < game->width; x++) {
     for (int y = 0; y < game->height; y++) {
       DrawRectangle(x * 50 + 1, y * 50 + 1, 48, 48, game->cells[y][x] == ALIVE ? RED : RAYWHITE);
-      DrawRectangleLines(x * 50, y * 50, 50, 50, ORANGE); 
+      DrawRectangleLines(x * 50, y * 50, 50, 50, LIGHTGRAY); 
     }
   }
+
+  static char text[64];
+  snprintf(text, sizeof(text), "Generation: %d", game->generation);
+  DrawText(text, 10, 0, 50, BLACK);
+  snprintf(text, sizeof(text), "Population: %d", count_population(game));
+  DrawText(text, 10, 50, 50, BLACK);
 
   EndDrawing();
 }
@@ -120,6 +127,17 @@ void get_cell_from_click(Vector2 mousePos, int cell[2]) {
     cell[1] = mousePos.y / 50;
 }
 
+void process_initial_setup(struct Game *game) {
+  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    static int cellPos[2];
+    Vector2 mousePos = GetMousePosition();    
+    get_cell_from_click(mousePos, cellPos);
+    game->cells[cellPos[1]][cellPos[0]] = !game->cells[cellPos[1]][cellPos[0]];
+  } else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+    game->setup = true;
+  }
+}
+
 int main() {
   struct Game game = {0};
   init_game(&game, 20, 20);
@@ -135,22 +153,11 @@ int main() {
   SetTargetFPS(10);
 
   while (!WindowShouldClose()) {
-    if (waiting) {
-      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        static int cellPos[2];
-
-        Vector2 mousePos = GetMousePosition();
-        
-        get_cell_from_click(mousePos, cellPos);
-        
-        game.cells[cellPos[1]][cellPos[0]] = !game.cells[cellPos[1]][cellPos[0]];
-      } else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-        waiting = false;
-      }
+    if (!game.setup) {
+      process_initial_setup(&game);
     } else {
       next_generation(&game);
     }
-
     draw(&game);  
   }
 
