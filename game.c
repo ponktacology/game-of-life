@@ -8,7 +8,6 @@ enum State {
   ALIVE
 };
 
-
 struct Game {
   int **cells;
   int **changes;
@@ -74,7 +73,6 @@ void next_generation(struct Game *game) {
   }
 }
 
-
 int count_population(struct Game *game) {
   int population = 0;
 
@@ -122,6 +120,18 @@ void init_game(struct Game *game, int width, int height) {
   }
 }
 
+void destroy_game(struct Game *game) {
+  for (int y = 0; y < game->height; y++) {
+      free(game->cells[y]);
+  }
+  free(game->cells);
+
+  for (int y = 0; y < game->height; y++) {
+      free(game->changes[y]);
+  }
+  free(game->changes);
+}
+
 void get_cell_from_click(Vector2 mousePos, int cell[2]) {
     cell[0] = mousePos.x / 50;
     cell[1] = mousePos.y / 50;
@@ -162,4 +172,5 @@ int main() {
   }
 
   CloseWindow();
+  destroy_game(&game);
 }
